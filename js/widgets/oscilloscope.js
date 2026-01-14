@@ -55,12 +55,16 @@ class Oscilloscope {
         }
 
         this.drawVisualIDs = {};
+        this.isRunning = true;
         const widgetWindow = window.widgetWindows.windowFor(this, "oscilloscope");
         this.widgetWindow = widgetWindow;
         widgetWindow.clear();
         widgetWindow.show();
 
         widgetWindow.onclose = () => {
+            // Stop the animation loops
+            this.isRunning = false;
+
             for (const turtle of this.divisions) {
                 const turtleIdx = this.activity.turtles.getIndexOfTurtle(turtle);
                 cancelAnimationFrame(this.drawVisualIDs[turtleIdx]);
@@ -147,6 +151,9 @@ class Oscilloscope {
         canvasCtx.clearRect(0, 0, width, height);
 
         const draw = () => {
+            // Stop animation if widget is no longer running
+            if (!this.isRunning) return;
+
             this.drawVisualIDs[turtleIdx] = requestAnimationFrame(draw);
             if (this.pitchAnalysers[turtleIdx] && (turtle.running || resized)) {
                 canvasCtx.fillStyle = "#FFFFFF";
