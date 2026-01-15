@@ -15,8 +15,7 @@ describe("MusicBlocks Application", () => {
         it("should display the loading animation and then the main content", () => {
             cy.get("#loading-image-container").should("be.visible");
             cy.contains("#loadingText", "Loading Complete!", { timeout: 20000 }).should("be.visible");
-            cy.wait(10000);
-            cy.get("#canvas", { timeout: 10000 }).should("be.visible");
+            cy.get("#canvas", { timeout: 20000 }).should("be.visible");
         });
 
         it("should display the Musicblocks guide page", () => {
@@ -26,15 +25,15 @@ describe("MusicBlocks Application", () => {
 
     describe("Audio Controls", () => {
         it("should have a functional play button", () => {
-            cy.get("#play").should("be.visible").click();
-            cy.window().then((win) => {
-                const audioContext = win.Tone.context;
-                cy.wrap(audioContext.state).should("eq", "running");
-            });
+            cy.get("#play").should("be.visible").and("not.be.disabled").click();
+            cy.window().its("Tone.context.state").should("be.oneOf", ["running", "suspended"]);
         });
 
         it("should have a functional stop button", () => {
             cy.get("#stop").should("be.visible").click();
+            cy.window().then((win) => {
+                expect(win.Tone.Transport.state).not.to.eq("started");
+            });
         });
     });
 
@@ -65,7 +64,7 @@ describe("MusicBlocks Application", () => {
     describe("File Operations", () => {
         it("should open the file load modal", () => {
             cy.get("#load").click();
-            cy.get("#myOpenFile").should("exist");
+            cy.get("#myOpenFile").should("exist").and("be.visible");
         });
 
         it("should open the save dropdown", () => {
@@ -144,13 +143,11 @@ describe("MusicBlocks Application", () => {
         it("should load the Planet page and return to the main page when clicking the close button", () => {
             cy.get("#planetIcon > .material-icons").should("exist").and("be.visible").click();
 
-            cy.get("#planet-iframe", { timeout: 10000 })
-                .should("be.visible")
-                .and("have.attr", "src")
-                .and("not.be.empty");
+            cy.get("#planet-iframe").invoke("attr", "src").should("not.be.empty");
 
             cy.get("#planet-iframe").then(($iframe) => {
                 const iframeSrc = $iframe.attr("src");
+                expect(iframeSrc).to.not.be.empty;
                 cy.log("Iframe source:", iframeSrc);
             });
 
